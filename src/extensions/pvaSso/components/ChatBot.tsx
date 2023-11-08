@@ -22,6 +22,7 @@ export const PVAChatbotDialog: React.FunctionComponent<IChatbotProps> = (props) 
     const [hideDialog, { toggle: toggleHideDialog }] = useBoolean(true);
     const labelId: string = useId('dialogLabel');
     const subTextId: string = useId('subTextLabel');
+    
     const modalProps = React.useMemo(
         () => ({
             isBlocking: false,
@@ -36,10 +37,16 @@ export const PVAChatbotDialog: React.FunctionComponent<IChatbotProps> = (props) 
     const webChatRef = useRef<HTMLDivElement>(null);
     const loadingSpinnerRef = useRef<HTMLDivElement>(null);
 
-    const handleClick = async () => {
-        
-        toggleHideDialog();
+    // A utility function that extracts the OAuthCard resource URI from the incoming activity or return undefined
+    function getOAuthCardResourceUri(activity: any): string | undefined {
+        const attachment = activity?.attachments?.[0];
+        if (attachment?.contentType === 'application/vnd.microsoft.card.oauth' && attachment.content.tokenExchangeResource) {
+            return attachment.content.tokenExchangeResource.uri;
+        }
+    }
 
+    const handleLayerDidMount = async () => {
+        
         const MSALWrapperInstance = new MSALWrapper(props.clientID, props.authority);
 
         // Trying to get token if user is already signed-in
@@ -49,32 +56,23 @@ export const PVAChatbotDialog: React.FunctionComponent<IChatbotProps> = (props) 
             // Trying to get token if user is not signed-in
             responseToken = await MSALWrapperInstance.acquireAccessToken([props.customScope], props.userEmail);
         }
-        
+
         const token = responseToken?.accessToken || null;
 
         // Create DirectLine object
         const response = await fetch(botURL);
 
-        let directlineInstance: any;
+        let directline: any;
 
         if (response.ok) {
             const conversationInfo = await response.json();
-            directlineInstance = ReactWebChat.createDirectLine({
+            directline = ReactWebChat.createDirectLine({
             token: conversationInfo.token,
-            });
-            } else {
-            console.error(`HTTP error! Status: ${response.status}`);
+        });
+        } else {
+        console.error(`HTTP error! Status: ${response.status}`);
         }
 
-
-        // Extract the OAuthCard resource URI from the incoming activity or return undefined
-        function getOAuthCardResourceUri(activity: any): string | undefined {
-            const attachment = activity?.attachments?.[0];
-            if (attachment?.contentType === 'application/vnd.microsoft.card.oauth' && attachment.content.tokenExchangeResource) {
-                return attachment.content.tokenExchangeResource.uri;
-            }
-        }
-            
         const store = ReactWebChat.createStore(
             {},
                ({ dispatch }: { dispatch: Dispatch }) => (next: any) => (action: any) => {
@@ -109,7 +107,7 @@ export const PVAChatbotDialog: React.FunctionComponent<IChatbotProps> = (props) 
                         const activity = action.payload.activity;
                         if (activity.from && activity.from.role === 'bot' &&
                         (getOAuthCardResourceUri(activity))){
-                          directlineInstance.postActivity({
+                          directline.postActivity({
                             type: 'invoke',
                             name: 'signin/tokenExchange',
                             value: {
@@ -126,7 +124,7 @@ export const PVAChatbotDialog: React.FunctionComponent<IChatbotProps> = (props) 
                                     (id: any) => {
                                       if(id === "retry"){
                                         // bot was not able to handle the invoke, so display the oauthCard (manual authentication)
-                                        console.log("Bot was not able to handle the invoke, so display the oauthCard")
+                                        console.log("bot was not able to handle the invoke, so display the oauthCard")
                                             return next(action);
                                       }
                                     },
@@ -148,19 +146,18 @@ export const PVAChatbotDialog: React.FunctionComponent<IChatbotProps> = (props) 
             );
         
             // Render webchat
-            if (token && directlineInstance) {
+            if (token && directline) {
                 if (webChatRef.current && loadingSpinnerRef.current) {
                     webChatRef.current.style.minHeight = '50vh';
                     loadingSpinnerRef.current.style.display = 'none';
                     ReactWebChat.renderWebChat(
                         {
-                            directLine: directlineInstance,
+                            directLine: directline,
                             store: store,
                             userID: props.userEmail,
                         },
                     webChatRef.current
                     );
-
                 } else {
                     console.error("Webchat or loading spinner not found");
                 }
@@ -170,10 +167,10 @@ export const PVAChatbotDialog: React.FunctionComponent<IChatbotProps> = (props) 
 
     return (
         <>
-            <DefaultButton secondaryText={props.buttonLabel} onClick={handleClick} text={props.buttonLabel} />
+            <DefaultButton secondaryText={props.buttonLabel} text={props.buttonLabel} onClick={toggleHideDialog}/>
             <Dialog styles={{
                 main: { selectors: { ['@media (min-width: 480px)']: { width: 450, minWidth: 450, maxWidth: '1000px' } } }
-            }} hidden={hideDialog} onDismiss={toggleHideDialog} dialogContentProps={dialogContentProps} modalProps={modalProps}>
+            }} hidden={hideDialog} onDismiss={toggleHideDialog} onLayerDidMount={handleLayerDidMount} dialogContentProps={dialogContentProps} modalProps={modalProps}>
                 <div id="chatContainer" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
                     <div ref={webChatRef} role="main" style={{ width: "100%", height: "0rem" }}></div>
                     <div ref={loadingSpinnerRef}><Spinner label="Loading..." style={{ paddingTop: "1rem", paddingBottom: "1rem" }} /></div>

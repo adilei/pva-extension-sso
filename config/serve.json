@@ -4,7 +4,7 @@
   "https": true,
   "serveConfigurations": {
     "default": {
-      "pageUrl": "https://d365demotss436574.sharepoint.com/sites/CustomerInsightsData/SitePages/My-Page.aspx",
+      "pageUrl": "https://d365demotss436574.sharepoint.com/sites/PVA2",
       "customActions": {
         "bbcf8287-ea2d-4bb6-868f-19b9cf4b0812": {
           "location": "ClientSideExtension.ApplicationCustomizer",
@@ -19,7 +19,7 @@
       }
     },
     "pvaSso": {
-      "pageUrl": "https://d365demotss436574.sharepoint.com/sites/CustomerInsightsData/SitePages/My-Page.aspx",
+      "pageUrl": "https://d365demotss436574.sharepoint.com/sites/PVA2",
       "customActions": {
         "bbcf8287-ea2d-4bb6-868f-19b9cf4b0812": {
           "location": "ClientSideExtension.ApplicationCustomizer",
