@@ -144,6 +144,10 @@ export const PVAChatbotDialog: React.FunctionComponent<IChatbotProps> = (props) 
                     return next(action);
                 }
             );
+
+            const canvasStyleOptions = {
+                hideUploadButton: true
+            }
         
             // Render webchat
             if (token && directline) {
@@ -154,6 +158,7 @@ export const PVAChatbotDialog: React.FunctionComponent<IChatbotProps> = (props) 
                         {
                             directLine: directline,
                             store: store,
+                            styleOptions: canvasStyleOptions,
                             userID: props.userEmail,
                         },
                     webChatRef.current
