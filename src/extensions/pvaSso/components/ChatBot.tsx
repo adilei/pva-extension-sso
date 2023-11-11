@@ -145,6 +145,7 @@ export const PVAChatbotDialog: React.FunctionComponent<IChatbotProps> = (props) 
                 }
             );
 
+            // hide the upload button - other style options can be added here
             const canvasStyleOptions = {
                 hideUploadButton: true
             }
