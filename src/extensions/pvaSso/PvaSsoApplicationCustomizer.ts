@@ -80,8 +80,6 @@ export default class PvaSsoApplicationCustomizer
   @override
   public onInit(): Promise<void> {
     
-    console.log("onInit");
-    Log.info(LOG_SOURCE, `Initialized ${strings.Title}`);
     Log.info(LOG_SOURCE, `Bot URL ${this.properties.botURL}`);
 
     if (!this.properties.buttonLabel || this.properties.buttonLabel === "") {
